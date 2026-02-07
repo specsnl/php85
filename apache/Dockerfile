@@ -89,11 +89,15 @@ RUN apt-get update \
         xsl \
         # Dependency of PHP event-extension
         sockets \
-    && pie install --with-php-config=$(which php-config) osmanov/pecl-event:$PHP_EVENT_VERSION \
-    && pie install --with-php-config=$(which php-config) igbinary/igbinary:$PHP_IGBINARY_VERSION \
-    && pie install --with-php-config=$(which php-config) php-amqp/php-amqp:$PHP_AMQP_VERSION \
-    && pie install --with-php-config=$(which php-config) \
-        phpredis/phpredis:$PHP_REDIS_VERSION --enable-redis-igbinary \
+    && pie install --skip-enable-extension osmanov/pecl-event:$PHP_EVENT_VERSION \
+    && pie install --skip-enable-extension igbinary/igbinary:$PHP_IGBINARY_VERSION \
+    && pie install --skip-enable-extension php-amqp/php-amqp:$PHP_AMQP_VERSION \
+    && pie install --skip-enable-extension phpredis/phpredis:$PHP_REDIS_VERSION --enable-redis-igbinary \
+    && docker-php-ext-enable --ini-name docker-php-ext-zz-custom \
+        event \
+        igbinary \
+        redis \
+        amqp \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     # Purge packages that where only needed for building php extensions
     && apt-get purge --assume-yes \
@@ -153,8 +157,8 @@ RUN apt-get update \
     && phive install --global composer:$COMPOSER_VERSION --trust-gpg-keys CBB3D576F2A0946F \
     && rm -rf /root/.phive \
     # Install Xdebug and pcov PHP extensions
-    && pie install --with-php-config=$(which php-config) xdebug/xdebug:$XDEBUG_VERSION \
-    && pie install --with-php-config=$(which php-config) pecl/pcov:$PCOV_VERSION \
+    && pie install xdebug/xdebug:$XDEBUG_VERSION \
+    && pie install pecl/pcov:$PCOV_VERSION \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
     # Cleanup
     && apt-get purge --assume-yes $PHPIZE_DEPS \
