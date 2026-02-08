@@ -4,7 +4,7 @@ FROM php:8.5.2-fpm-trixie AS runtime
 ARG UNIQUE_ID_FOR_CACHEFROM=runtime
 
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
-ARG PHP_EVENT_VERSION=dev-master#daa2b07
+ARG PHP_EVENT_VERSION=3.1.5
 # Latest version of igbinary-extension: https://packagist.org/packages/igbinary/igbinary
 ARG PHP_IGBINARY_VERSION=3.2.17RC1
 # Latest version of redis-extension: https://packagist.org/packages/phpredis/phpredis
@@ -130,9 +130,9 @@ ARG UNIQUE_ID_FOR_CACHEFROM=builder
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.16.0
 # Latest version of Composer: https://getcomposer.org/download
-ARG COMPOSER_VERSION=2.9.4
+ARG COMPOSER_VERSION=2.9.5
 # Latest version of Xdebug: https://packagist.org/packages/xdebug/xdebug
-ARG XDEBUG_VERSION=3.5.0
+ARG XDEBUG_VERSION=3.5.1
 # Latest version of pcov: https://packagist.org/packages/pecl/pcov
 ARG PCOV_VERSION=1.0.12
 
