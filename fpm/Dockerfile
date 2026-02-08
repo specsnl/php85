@@ -93,7 +93,7 @@ RUN apt-get update \
     && pie install --skip-enable-extension igbinary/igbinary:$PHP_IGBINARY_VERSION \
     && pie install --skip-enable-extension php-amqp/php-amqp:$PHP_AMQP_VERSION \
     && pie install --skip-enable-extension phpredis/phpredis:$PHP_REDIS_VERSION --enable-redis-igbinary \
-    && docker-php-ext-enable --ini-name docker-php-ext-zz-custom \
+    && docker-php-ext-enable --ini-name docker-php-ext-zz-custom.ini \
         event \
         igbinary \
         redis \
