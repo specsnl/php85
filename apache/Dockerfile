@@ -4,7 +4,7 @@ FROM php:8.5.2-apache-trixie AS runtime
 ARG UNIQUE_ID_FOR_CACHEFROM=runtime
 
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
-ARG PHP_EVENT_VERSION=dev-master#daa2b07
+ARG PHP_EVENT_VERSION=3.1.5
 # Latest version of igbinary-extension: https://packagist.org/packages/igbinary/igbinary
 ARG PHP_IGBINARY_VERSION=3.2.17RC1
 # Latest version of redis-extension: https://packagist.org/packages/phpredis/phpredis
