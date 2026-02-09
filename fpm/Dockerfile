@@ -162,6 +162,11 @@ RUN apt-get update \
     # Install Composer using Phive
     && phive install --global composer:$COMPOSER_VERSION --trust-gpg-keys CBB3D576F2A0946F \
     && rm -rf /root/.phive \
+    # Download Composer keys
+    && mkdir -p "$XDG_CONFIG_HOME/composer" \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.dev.pub" https://composer.github.io/snapshots.pub \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.tags.pub" https://composer.github.io/releases.pub \
+    && chmod 644 "$XDG_CONFIG_HOME/composer/keys.dev.pub" "$XDG_CONFIG_HOME/composer/keys.tags.pub" \
     # Install Xdebug and pcov PHP extensions
     && pie install xdebug/xdebug:$XDEBUG_VERSION \
     && pie install pecl/pcov:$PCOV_VERSION \
