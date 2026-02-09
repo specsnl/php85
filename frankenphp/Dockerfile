@@ -1,8 +1,6 @@
 # Latest version of FrankenPHP base image: https://hub.docker.com/r/dunglas/frankenphp/tags
 FROM dunglas/frankenphp:1.11-php8.5.2-trixie AS runtime
 
-ARG UNIQUE_ID_FOR_CACHEFROM=runtime
-
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
 ARG PHP_EVENT_VERSION=3.1.5
 # Latest version of igbinary-extension: https://packagist.org/packages/igbinary/igbinary
@@ -129,8 +127,6 @@ COPY files /
 
 FROM runtime AS builder
 
-ARG UNIQUE_ID_FOR_CACHEFROM=builder
-
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.16.0
 # Latest version of Composer: https://getcomposer.org/download
@@ -177,8 +173,6 @@ FROM builder AS builder_nodejs
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-ARG UNIQUE_ID_FOR_CACHEFROM=builder_nodejs
 
 # Latest version of Node.js: https://nodejs.org
 ARG NODE_MAJOR=24
