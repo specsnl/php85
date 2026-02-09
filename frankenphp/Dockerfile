@@ -148,6 +148,7 @@ RUN apt-get update \
         git \
         sqlite3 \
         wait-for-it \
+        p7zip-full \
         # Needed for phive:
         gnupg \
     # Install Phive
