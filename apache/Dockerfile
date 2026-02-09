@@ -1,6 +1,12 @@
 # Latest version of PHP base image: https://hub.docker.com/_/php/tags
 FROM php:8.5.2-apache-trixie AS runtime
 
+ARG XDG_CONFIG_HOME=/config
+ENV XDG_CONFIG_HOME=$XDG_CONFIG_HOME
+
+ARG XDG_DATA_HOME=/data
+ENV XDG_DATA_HOME=$XDG_DATA_HOME
+
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
 ARG PHP_EVENT_VERSION=3.1.5
 # Latest version of igbinary-extension: https://packagist.org/packages/igbinary/igbinary
@@ -112,8 +118,11 @@ RUN apt-get update \
         libpq-dev \
         librabbitmq-dev \
         libxslt1-dev \
-    # Cleanup
+    && mkdir -p \
+        $XDG_CONFIG_HOME \
+        $XDG_DATA_HOME \
     && rm -rf /var/www/* \
+    # Cleanup
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/* \
@@ -191,6 +200,7 @@ RUN apt-get update \
     && npm uninstall --global npm \
     && corepack install --global npm@11.x yarn@4.x pnpm@10.x \
     && corepack enable npm yarn pnpm \
+    # Cleanup
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/* \
