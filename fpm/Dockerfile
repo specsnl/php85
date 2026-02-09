@@ -1,7 +1,11 @@
 # Latest version of PHP base image: https://hub.docker.com/_/php/tags
 FROM php:8.5.2-fpm-trixie AS runtime
 
-ARG UNIQUE_ID_FOR_CACHEFROM=runtime
+ARG XDG_CONFIG_HOME=/config
+ENV XDG_CONFIG_HOME=$XDG_CONFIG_HOME
+
+ARG XDG_DATA_HOME=/data
+ENV XDG_DATA_HOME=$XDG_DATA_HOME
 
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
 ARG PHP_EVENT_VERSION=3.1.5
@@ -114,8 +118,11 @@ RUN apt-get update \
         libpq-dev \
         librabbitmq-dev \
         libxslt1-dev \
-    # Cleanup
+    && mkdir -p \
+        $XDG_CONFIG_HOME \
+        $XDG_DATA_HOME \
     && rm -rf /var/www/* \
+    # Cleanup
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/* \
@@ -124,8 +131,6 @@ RUN apt-get update \
 COPY files /
 
 FROM runtime AS builder
-
-ARG UNIQUE_ID_FOR_CACHEFROM=builder
 
 # Latest version of Phive: https://api.github.com/repos/phar-io/phive/releases/latest
 ARG PHIVE_VERSION=0.16.0
@@ -144,6 +149,7 @@ RUN apt-get update \
         git \
         sqlite3 \
         wait-for-it \
+        p7zip-full \
         # Needed for phive:
         gnupg \
     # Install Phive
@@ -156,6 +162,11 @@ RUN apt-get update \
     # Install Composer using Phive
     && phive install --global composer:$COMPOSER_VERSION --trust-gpg-keys CBB3D576F2A0946F \
     && rm -rf /root/.phive \
+    # Download Composer keys
+    && mkdir -p "$XDG_CONFIG_HOME/composer" \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.dev.pub" https://composer.github.io/snapshots.pub \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.tags.pub" https://composer.github.io/releases.pub \
+    && chmod 644 "$XDG_CONFIG_HOME/composer/keys.dev.pub" "$XDG_CONFIG_HOME/composer/keys.tags.pub" \
     # Install Xdebug and pcov PHP extensions
     && pie install xdebug/xdebug:$XDEBUG_VERSION \
     && pie install pecl/pcov:$PCOV_VERSION \
@@ -172,8 +183,6 @@ FROM builder AS builder_nodejs
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-ARG UNIQUE_ID_FOR_CACHEFROM=builder_nodejs
 
 # Latest version of Node.js: https://nodejs.org
 ARG NODE_MAJOR=24
@@ -196,6 +205,7 @@ RUN apt-get update \
     && npm uninstall --global npm \
     && corepack install --global npm@11.x yarn@4.x pnpm@10.x \
     && corepack enable npm yarn pnpm \
+    # Cleanup
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
     && rm -rf /var/lib/apt/lists/* \
