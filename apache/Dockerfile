@@ -7,6 +7,9 @@ ENV XDG_CONFIG_HOME=$XDG_CONFIG_HOME
 ARG XDG_DATA_HOME=/data
 ENV XDG_DATA_HOME=$XDG_DATA_HOME
 
+ARG XDG_CACHE_HOME=/cache
+ENV XDG_CACHE_HOME=$XDG_CACHE_HOME
+
 # Latest version of event-extension: https://packagist.org/packages/osmanov/pecl-event
 ARG PHP_EVENT_VERSION=3.1.5
 # Latest version of igbinary-extension: https://packagist.org/packages/igbinary/igbinary
@@ -121,6 +124,7 @@ RUN apt-get update \
     && mkdir -p \
         $XDG_CONFIG_HOME \
         $XDG_DATA_HOME \
+        $XDG_CACHE_HOME \
     && rm -rf /var/www/* \
     # Cleanup
     && apt-get autoremove --assume-yes \
