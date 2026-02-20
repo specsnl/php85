@@ -24,8 +24,8 @@ ENV SMTPEHLO=localhost
 
 WORKDIR /var/www
 
-# Install PHP Installer for Extensions (PIE)
-COPY --from=ghcr.io/php/pie:1.3.7-bin /pie /usr/bin/pie
+# Latest version of Pie: https://github.com/php/pie/releases
+COPY --from=ghcr.io/php/pie:1.3.8-bin /pie /usr/bin/pie
 
 RUN apt-get update \
     && apt-get install --assume-yes --no-install-recommends \
