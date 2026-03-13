@@ -1,5 +1,5 @@
 # Latest version of PHP base image: https://hub.docker.com/_/php/tags
-FROM php:8.5.3-fpm-trixie AS runtime
+FROM php:8.5.4-fpm-trixie AS runtime
 
 ARG XDG_CONFIG_HOME=/config
 ENV XDG_CONFIG_HOME=$XDG_CONFIG_HOME
