@@ -45,15 +45,39 @@
                 "do_not_enforce_on_create": false,
                 "required_status_checks": [
                     {
-                        "context": "merge (ghcr.io/specsnl/php85) / Merge Images",
+                        "context": "merge (ghcr.io/specsnl/php85) / runtime / Merge Images (runtime)",
                         "integration_id": 15368
                     },
                     {
-                        "context": "merge (ghcr.io/specsnl/php85/apache) / Merge Images",
+                        "context": "merge (ghcr.io/specsnl/php85) / builder / Merge Images (builder)",
                         "integration_id": 15368
                     },
                     {
-                        "context": "merge (ghcr.io/specsnl/php85/frankenphp) / Merge Images",
+                        "context": "merge (ghcr.io/specsnl/php85) / builder_nodejs / Merge Images (builder_nodejs)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/apache) / runtime / Merge Images (runtime)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/apache) / builder / Merge Images (builder)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/apache) / builder_nodejs / Merge Images (builder_nodejs)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/frankenphp) / runtime / Merge Images (runtime)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/frankenphp) / builder / Merge Images (builder)",
+                        "integration_id": 15368
+                    },
+                    {
+                        "context": "merge (ghcr.io/specsnl/php85/frankenphp) / builder_nodejs / Merge Images (builder_nodejs)",
                         "integration_id": 15368
                     }
                 ]
