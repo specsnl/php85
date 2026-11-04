@@ -9,14 +9,16 @@ FROM php:8.5.12-fpm-trixie AS runtime
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV LANG=C.UTF-8
+
 ARG XDG_CONFIG_HOME=/config
-ENV XDG_CONFIG_HOME=$XDG_CONFIG_HOME
+ENV XDG_CONFIG_HOME="$XDG_CONFIG_HOME"
 
 ARG XDG_DATA_HOME=/data
-ENV XDG_DATA_HOME=$XDG_DATA_HOME
+ENV XDG_DATA_HOME="$XDG_DATA_HOME"
 
 ARG XDG_CACHE_HOME=/cache
-ENV XDG_CACHE_HOME=$XDG_CACHE_HOME
+ENV XDG_CACHE_HOME="$XDG_CACHE_HOME"
 
 # Latest version of event-extension: https://pecl.php.net/package/event
 ARG PHP_EVENT_VERSION=3.1.6
@@ -52,9 +54,9 @@ RUN --mount=type=bind,from=php_extension_installer,source=/usr/bin/install-php-e
         "amqp-$PHP_AMQP_VERSION" \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && mkdir -p \
-        $XDG_CONFIG_HOME \
-        $XDG_DATA_HOME \
-        $XDG_CACHE_HOME \
+        "$XDG_CONFIG_HOME" \
+        "$XDG_DATA_HOME" \
+        "$XDG_CACHE_HOME" \
     && rm -rf /var/www/* \
     # Cleanup
     && apt-get autoremove --assume-yes \
@@ -127,27 +129,28 @@ RUN curl -fsSLo /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/d
     && useradd --uid "$USER_UID" --gid "$USER_GID" --create-home "$USER" --shell /bin/bash \
     && mkdir -p \
         /etc/fixuid \
-        "/data" \
-        "/config" \
-        "/cache/npm" \
-        "/cache/node" \
+        "$XDG_CACHE_HOME/npm" \
+        "$XDG_CACHE_HOME/node" \
+        "$XDG_CACHE_HOME/yarn" \
+        "$XDG_DATA_HOME/pnpm/store" \
+        "$XDG_DATA_HOME/yarn/berry" \
     && chown -R "$USER_UID":"$USER_GID" \
-        "/data" \
-        "/config" \
-        "/cache" \
+        "$XDG_DATA_HOME" \
+        "$XDG_CONFIG_HOME" \
+        "$XDG_CACHE_HOME" \
     && cat <<EOF > /etc/fixuid/config.yml
 user: $USER
 group: $existing_group
 paths:
   - /var/www
-  - /home/$USER
-  - /data
-  - /config
-  - /cache
+  - "/home/$USER"
+  - "$XDG_DATA_HOME"
+  - "$XDG_CONFIG_HOME"
+  - "$XDG_CACHE_HOME"
 
 EOF
 
-COPY --from=composer /composer /usr/bin/composer
+COPY --from=composer /composer /usr/local/bin/composer
 
 # Latest version of node: https://hub.docker.com/_/node/tags
 FROM node:24.22.2-trixie-slim AS node
@@ -158,6 +161,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 ENV npm_config_cache="$XDG_CACHE_HOME/npm"
+ENV PNPM_CONFIG_STORE_DIR="$XDG_DATA_HOME/pnpm/store"
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
@@ -168,8 +172,11 @@ RUN apt-get update \
         g++ \
         make \
     && ln -s ../lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack \
-    && corepack install --global npm@11.x yarn@4.x pnpm@10.x \
+    && corepack install --global npm@12.x yarn@4.x pnpm@12.x \
     && corepack enable npm yarn pnpm \
+    # pnpm downloads its platform-specific binary on first run
+    && pnpm --version \
+    && chown -R --reference="$XDG_CACHE_HOME" "$XDG_CACHE_HOME/node" \
     # Cleanup
     && apt-get autoremove --assume-yes \
     && apt-get clean --assume-yes \
