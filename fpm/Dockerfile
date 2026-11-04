@@ -69,6 +69,9 @@ COPY files/general /
 # Latest version of Composer: https://hub.docker.com/r/composer/composer/tags
 FROM composer/composer:2.11.1-bin AS composer
 
+# Latest version of node: https://hub.docker.com/_/node/tags
+FROM node:26.13.0-trixie-slim AS node
+
 FROM runtime AS builder
 
 ARG TARGETARCH
@@ -78,32 +81,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG XDEBUG_VERSION=3.5.3
 # Latest version of pcov: https://pecl.php.net/package/pcov
 ARG PCOV_VERSION=1.0.12
-
-RUN --mount=type=bind,from=php_extension_installer,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-    apt-get update \
-    && apt-get install --assume-yes --no-install-recommends \
-        vim \
-        git \
-        sqlite3 \
-        wait-for-it \
-        p7zip-full \
-        unzip \
-        curl \
-    # Download Composer keys
-    && mkdir -p "$XDG_CONFIG_HOME/composer" \
-    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.dev.pub" https://composer.github.io/snapshots.pub \
-    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.tags.pub" https://composer.github.io/releases.pub \
-    && chmod 644 "$XDG_CONFIG_HOME/composer/keys.dev.pub" "$XDG_CONFIG_HOME/composer/keys.tags.pub" \
-    # Install Xdebug and pcov PHP extensions
-    && install-php-extensions \
-        "xdebug-$XDEBUG_VERSION" \
-        "pcov-$PCOV_VERSION" \
-    && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
-    # Cleanup
-    && apt-get autoremove --assume-yes \
-    && apt-get clean --assume-yes \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /tmp/*
 
 # Latest version of fixuid: https://github.com/boxboat/fixuid/releases/latest
 ARG FIXUID_VERSION=0.6.0
@@ -115,7 +92,31 @@ ARG USER_GID=1000
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN curl -fsSLo /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/download/v$FIXUID_VERSION/fixuid-${FIXUID_VERSION}-linux-${TARGETARCH}.tar.gz" \
+RUN --mount=type=bind,from=php_extension_installer,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+    apt-get update \
+    && apt-get install --assume-yes --no-install-recommends \
+        vim \
+        git \
+        sqlite3 \
+        wait-for-it \
+        p7zip-full \
+        unzip \
+        curl \
+        gcc \
+        g++ \
+        make \
+    # Download Composer keys
+    && mkdir -p "$XDG_CONFIG_HOME/composer" \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.dev.pub" https://composer.github.io/snapshots.pub \
+    && curl -fsSLo "$XDG_CONFIG_HOME/composer/keys.tags.pub" https://composer.github.io/releases.pub \
+    && chmod 644 "$XDG_CONFIG_HOME/composer/keys.dev.pub" "$XDG_CONFIG_HOME/composer/keys.tags.pub" \
+    # Install Xdebug and pcov PHP extensions
+    && install-php-extensions \
+        "xdebug-$XDEBUG_VERSION" \
+        "pcov-$PCOV_VERSION" \
+    && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
+    # Install fixuid
+    && curl -fsSLo /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/download/v$FIXUID_VERSION/fixuid-${FIXUID_VERSION}-linux-${TARGETARCH}.tar.gz" \
     && tar -xf /tmp/fixuid.tar.gz -C /usr/local/bin fixuid \
     && chown root:root /usr/local/bin/fixuid \
     && chmod 4755 /usr/local/bin/fixuid \
@@ -138,6 +139,11 @@ RUN curl -fsSLo /tmp/fixuid.tar.gz "https://github.com/boxboat/fixuid/releases/d
         "$XDG_DATA_HOME" \
         "$XDG_CONFIG_HOME" \
         "$XDG_CACHE_HOME" \
+    # Cleanup
+    && apt-get autoremove --assume-yes \
+    && apt-get clean --assume-yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
     && cat <<EOF > /etc/fixuid/config.yml
 user: $USER
 group: $existing_group
@@ -150,15 +156,6 @@ paths:
 
 EOF
 
-COPY --from=composer /composer /usr/local/bin/composer
-
-# Latest version of node: https://hub.docker.com/_/node/tags
-FROM node:24.22.2-trixie-slim AS node
-
-FROM builder AS builder_nodejs
-
-ARG DEBIAN_FRONTEND=noninteractive
-
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 ENV npm_config_cache="$XDG_CACHE_HOME/npm"
 ENV PNPM_CONFIG_STORE_DIR="$XDG_DATA_HOME/pnpm/store"
@@ -166,19 +163,20 @@ ENV PNPM_CONFIG_STORE_DIR="$XDG_DATA_HOME/pnpm/store"
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-RUN apt-get update \
-    && apt-get install --assume-yes --no-install-recommends \
-        gcc \
-        g++ \
-        make \
-    && ln -s ../lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack \
+# Latest version of corepack: https://www.npmjs.com/package/corepack
+ARG COREPACK_VERSION=0.36.0
+
+# Node.js 25+ no longer bundles corepack. npm's bin links are not copied from the node stage, and its cache goes to /tmp
+# so no root-owned files end up in npm_config_cache.
+RUN node /usr/local/lib/node_modules/npm/bin/npm-cli.js install --global \
+        --cache /tmp/npm-cache --no-update-notifier --no-audit --no-fund \
+        "corepack@$COREPACK_VERSION" \
     && corepack install --global npm@12.x yarn@4.x pnpm@12.x \
     && corepack enable npm yarn pnpm \
     # pnpm downloads its platform-specific binary on first run
     && pnpm --version \
     && chown -R --reference="$XDG_CACHE_HOME" "$XDG_CACHE_HOME/node" \
     # Cleanup
-    && apt-get autoremove --assume-yes \
-    && apt-get clean --assume-yes \
-    && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/*
+
+COPY --from=composer /composer /usr/local/bin/composer
