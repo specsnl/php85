@@ -152,7 +152,7 @@ paths:
 
 EOF
 
-COPY --from=composer /composer /usr/bin/composer
+COPY --from=composer /composer /usr/local/bin/composer
 
 # Latest version of node: https://hub.docker.com/_/node/tags
 FROM node:24.22.2-trixie-slim AS node
