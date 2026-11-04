@@ -5,7 +5,7 @@
 FROM mlocati/php-extension-installer:2.13.1 AS php_extension_installer
 
 # Latest version of FrankenPHP base image: https://hub.docker.com/r/dunglas/frankenphp/tags or https://github.com/php/frankenphp/releases
-FROM dunglas/frankenphp:1.13.1-php8.5.11-trixie AS runtime
+FROM dunglas/frankenphp:1.13.4-php8.5.12-trixie AS runtime
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -70,7 +70,7 @@ COPY files/general /
 COPY files/frankenphp /
 
 # Latest version of Composer: https://hub.docker.com/r/composer/composer/tags
-FROM composer/composer:2.11.0-bin AS composer
+FROM composer/composer:2.11.1-bin AS composer
 
 FROM runtime AS builder
 

@@ -5,7 +5,7 @@
 FROM mlocati/php-extension-installer:2.13.1 AS php_extension_installer
 
 # Latest version of PHP base image: https://hub.docker.com/_/php/tags
-FROM php:8.5.11-apache-trixie AS runtime
+FROM php:8.5.12-apache-trixie AS runtime
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -65,7 +65,7 @@ RUN --mount=type=bind,from=php_extension_installer,source=/usr/bin/install-php-e
 COPY files/general /
 
 # Latest version of Composer: https://hub.docker.com/r/composer/composer/tags
-FROM composer/composer:2.11.0-bin AS composer
+FROM composer/composer:2.11.1-bin AS composer
 
 FROM runtime AS builder
 
